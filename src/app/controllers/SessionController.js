@@ -3,39 +3,48 @@ import User from '../models/User'
 
 class SessionController {
     async store(request, response) {
-        const shema = Yup.object({
+        const schema = Yup.object({
             email: Yup.string().email().required(),
             password: Yup.string().min(6).required(),
         });
 
-const isValid = await shema.isValid(request.body);
-//verificar se os dados informados estão corretos//
-if (!isValid) {
-    return response
-    .status(401)
-    .json({error: 'Make sure that your email or password are correct'})
-}
+        const isValid = await schema.isValid(request.body);
 
-const { email, password } = request.body
+        const emailOrPasswordIncorrect = () =>
+            response
+                .status(401)
+                .json({ error: 'Make sure that your email or password are correct' })
 
-const user = await User.findOne({
-    where: {
-        email,
-    }
-})
-//verificar se o usuário existe//
-if (!user) {
-    return response
-    .status(401)
-    .json({error: 'Make sure that your email or password are correct'})
-}
+        // verificar se os dados informados estão corretos
+        if (!isValid) {
+           return emailOrPasswordIncorrect()
+        }
 
-//verificar se a senha está certa//
-const isSamePassword = await user.comparePassword(password);
+        const { email, password } = request.body
 
-console.log(isSamePassword)
+        const user = await User.findOne({
+            where: {
+                email,
+            }
+        })
+        //verificar se o usuário existe
+        if (!user) {
+            return emailOrPasswordIncorrect()
+        }
 
-        return response.json({ message: 'session' })
+        //verificar se a senha está certa
+        const isSamePassword = await user.checkPassword(password);
+
+        if (!isSamePassword) {
+            return emailOrPasswordIncorrect()
+        }
+
+        return response.status(201).json({
+            id: user.id,
+            name: user.name,
+            email,
+            admin: user.admin
+        })
     }
 }
 
