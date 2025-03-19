@@ -31,8 +31,7 @@ routes.put("/categories/:id", upload.single("file"), CategoryController.update);
 routes.post("/orders", OrderController.store);
 routes.get("/orders", OrderController.index);
 routes.put("/orders/:id", OrderController.update);
-routes.delete("/orders/:id", OrderController.deleteOrder);
-
+routes.delete("/products/:id", ProductController.delete);
 routes.post("/create-payment-intent", CreatePaymentIntentController.store);
 
 export default routes;

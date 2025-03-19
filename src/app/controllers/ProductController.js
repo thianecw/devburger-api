@@ -4,6 +4,7 @@ import Category from "../models/Category";
 import User from "../models/User";
 
 class ProductController {
+	// Função para criar um novo produto
 	async store(request, response) {
 		console.log("Request body:", request.body);
 		console.log("Request file:", request.file);
@@ -28,7 +29,7 @@ class ProductController {
 		const { admin: isAdmin } = await User.findByPk(request.userId);
 
 		if (!isAdmin) {
-			return response.status(401).json();
+			return response.status(401).json({ error: "Unauthorized" });
 		}
 
 		const { filename: path } = request.file;
@@ -45,6 +46,7 @@ class ProductController {
 		return response.status(201).json(product);
 	}
 
+	// Função para atualizar um produto
 	async update(request, response) {
 		const schema = Yup.object({
 			name: Yup.string(),
@@ -62,7 +64,7 @@ class ProductController {
 		const { admin: isAdmin } = await User.findByPk(request.userId);
 
 		if (!isAdmin) {
-			return response.status(401).json();
+			return response.status(401).json({ error: "Unauthorized" });
 		}
 
 		const { id } = request.params;
@@ -73,7 +75,6 @@ class ProductController {
 				.json({ error: "Make sure your product id is correct" });
 		}
 
-		//deixando o path como opcional//
 		let path;
 		if (request.file) {
 			path = request.file.filename;
@@ -96,9 +97,12 @@ class ProductController {
 			},
 		);
 
-		return response.status(200).json();
+		return response
+			.status(200)
+			.json({ message: "Produto atualizado com sucesso 🎉" });
 	}
 
+	// Função para listar todos os produtos
 	async index(request, response) {
 		const products = await Product.findAll({
 			include: {
@@ -109,6 +113,29 @@ class ProductController {
 		});
 
 		return response.json(products);
+	}
+
+	// Função para excluir um produto
+	async delete(request, response) {
+		try {
+			const { id } = request.params;
+			const product = await Product.findByPk(id);
+
+			if (!product) {
+				return response.status(404).json({ error: "Produto não encontrado ⚠️" });
+			}
+
+			await product.destroy();
+
+			return response
+				.status(200)
+				.json({ message: "Produto excluído com sucesso 🗑️" });
+		} catch (error) {
+			console.error(error);
+			return response
+				.status(500)
+				.json({ error: "Erro ao excluir o produto ❌" });
+		}
 	}
 }
 
